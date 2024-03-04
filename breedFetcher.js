@@ -6,32 +6,21 @@ const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
 });
+const url = `https://api.thecatapi.com/v1/breeds/search?q=`;
 
-const name = process.argv.slice(2);
-const url = `https://api.thecatapi.com/v1/breeds/search?q=${name}`;
-
-const breedFetcher = function () {
-    request(url, (error, response, body) => {
+const fetchBreedDescription = function (breed, callback) {
+    request(`${url}${breed}`, (error, response, body) => {
         const data = JSON.parse(body);
-        if (error) {
-            console.error("REQUEST FAILED:", error);
-            rl.close();
-            return;
-        }
-
         if (response.statusCode !== 200) {
-            console.error(
-                "Error: Code other than 200 detected.",
-                response.statusCode
-            );
-            rl.close;
-            return;
-        } else if (!data[0]) {
-            console.log("Breed Not Found.");
-            return;
+            const errMsg = `Error: Status Code ${response.statusCode}`;
+            callback(errMsg, null);
+        } else if (data.length < 1) {
+            callback("Breed Not Found", null);
         } else {
-            console.log(data[0].description);
+            callback(null, data[0]["description"]);
         }
     });
+    rl.close();
 };
-breedFetcher();
+
+module.exports = { fetchBreedDescription };
